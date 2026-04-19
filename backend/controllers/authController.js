@@ -99,7 +99,7 @@ const verifyEmail = async (req, res) => {
     await user.save();
 
     // ✅ BETTER UX (redirect instead of plain text)
-    res.redirect(`${process.env.CLIENT_URL}/login`);
+   res.json({ success: true, message: 'Email verified' });
 
   } catch (error) {
     res.status(500).send('Server error');

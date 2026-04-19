@@ -11,6 +11,8 @@ import Notifications from './pages/Notifications';
 import ItemDetail from './pages/ItemDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Messages from './pages/Messages';
+import Verify from './pages/Verify';
+
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="loading">Loading...</div>;
@@ -40,6 +42,7 @@ function App() {
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
 <Route path="/messages/:userId" element={<PrivateRoute><Messages /></PrivateRoute>} />
+<Route path="/verify/:token" element={<Verify />} />
       </Routes>
     </BrowserRouter>
   );
