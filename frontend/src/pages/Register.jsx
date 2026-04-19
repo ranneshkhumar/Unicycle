@@ -47,7 +47,7 @@ export default function Register() {
         <div style={s.formCard}>
           <div style={s.formHeader}>
             <h2 style={s.formTitle}>Create Account</h2>
-            <p style={s.formSub}>Join CampusShare — it's free!</p>
+            <p style={s.formSub}>Join Unicycle — it's free!</p>
           </div>
 
           <form onSubmit={handleSubmit} style={s.form}>
