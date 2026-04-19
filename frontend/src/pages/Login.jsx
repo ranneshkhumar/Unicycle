@@ -55,7 +55,7 @@ export default function Login() {
         <div style={s.formCard}>
           <div style={s.formHeader}>
             <h2 style={s.formTitle}>Welcome </h2>
-            <p style={s.formSub}>Sign in to your CampusShare account</p>
+            <p style={s.formSub}>Sign in to your Unicycle account</p>
           </div>
 
           <form onSubmit={handleSubmit} style={s.form}>
