@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../utils/api';
 import toast from 'react-hot-toast';
@@ -10,6 +10,8 @@ export default function AddItem() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -22,6 +24,12 @@ export default function AddItem() {
     tags: '',
     penalty: '',
   });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,10 +56,10 @@ export default function AddItem() {
 
   return (
     <div style={s.page}>
-      <div style={s.container}>
+      <div style={s.container(isMobile)}>
 
         {/* Page Header */}
-        <div style={s.pageHeader}>
+        <div style={s.pageHeader(isMobile)}>
           <button style={s.backBtn} onClick={() => navigate('/')}>← Back to Browse</button>
           <div>
             <h1 style={s.pageTitle}>List an Item</h1>
@@ -59,15 +67,15 @@ export default function AddItem() {
           </div>
         </div>
 
-        <div style={s.layout}>
+        <div style={s.layout(isMobile)}>
           {/* Main Form */}
-          <div style={s.formCard}>
+          <div style={s.formCard(isMobile)}>
             <form onSubmit={handleSubmit}>
 
               {/* Listing Type */}
               <div style={s.section}>
                 <p style={s.sectionLabel}>Listing Type</p>
-                <div style={s.typeGrid}>
+                <div style={s.typeGrid(isMobile)}>
                   {typeOptions.map(t => {
                     const isActive = form.listingType === t.value;
                     return (
@@ -97,7 +105,7 @@ export default function AddItem() {
               {/* Basic Details */}
               <div style={s.section}>
                 <p style={s.sectionLabel}>Item Details</p>
-                <div style={s.grid2}>
+                <div style={s.grid2(isMobile)}>
                   <div style={s.field}>
                     <label style={s.label}>Item Title *</label>
                     <input
@@ -142,22 +150,18 @@ export default function AddItem() {
                         />
                       </div>
                       <div style={s.field}>
-  <label style={s.label}>Damage Penalty (if needed)</label>
-
-  <input
-    style={s.input}
-    type="text"
-    placeholder="e.g. ₹50 fine or full replacement cost"
-    value={form.penalty}
-    onChange={e => setForm({ ...form, penalty: e.target.value })}
-    required
-  />
-
-  <small style={{ color: "#6b6375", fontSize: 12 }}>
-    Clearly mention the penalty if the item is damaged
-  </small>
-</div>
-                      
+                        <label style={s.label}>Damage Penalty (if needed)</label>
+                        <input
+                          style={s.input}
+                          type="text"
+                          placeholder="e.g. ₹50 fine or full replacement cost"
+                          value={form.penalty}
+                          onChange={e => setForm({ ...form, penalty: e.target.value })}
+                        />
+                        <small style={{ color: "#6b6375", fontSize: 12 }}>
+                          Clearly mention the penalty if the item is damaged
+                        </small>
+                      </div>
                     </>
                   )}
 
@@ -175,6 +179,7 @@ export default function AddItem() {
                       />
                     </div>
                   )}
+
                   {form.listingType === 'Free' && (
                     <div style={s.field}>
                       <label style={s.label}>Available Until</label>
@@ -246,7 +251,7 @@ export default function AddItem() {
               </div>
 
               {/* Buttons */}
-              <div style={s.btnRow}>
+              <div style={s.btnRow(isMobile)}>
                 <button type="button" style={s.cancelBtn} onClick={() => navigate('/')}>
                   Cancel
                 </button>
@@ -257,8 +262,8 @@ export default function AddItem() {
             </form>
           </div>
 
-          {/* Right Sidebar */}
-          <div style={s.sidebar}>
+          {/* Sidebar (Preview + Tips) */}
+          <div style={s.sidebar(isMobile)}>
             {/* Live Preview */}
             <div style={s.previewCard}>
               <p style={s.previewLabel}>Preview</p>
@@ -319,37 +324,162 @@ export default function AddItem() {
   );
 }
 
+/* ==================== RESPONSIVE STYLES ==================== */
 const s = {
   page: { minHeight: '100vh', background: '#F1F8F4' },
-  container: { maxWidth: 1100, margin: '0 auto', padding: '32px 24px' },
-  pageHeader: { display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28 },
-  backBtn: { padding: '8px 16px', background: '#fff', border: '1.5px solid #E2EFE6', borderRadius: 8, color: '#6B7280', cursor: 'pointer', fontSize: 13, fontWeight: 500, flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' },
+
+  container: (isMobile) => ({
+    maxWidth: 1100,
+    margin: '0 auto',
+    padding: isMobile ? '24px 16px' : '32px 24px'
+  }),
+
+  pageHeader: (isMobile) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: 20,
+    marginBottom: 28,
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'flex-start' : 'center'
+  }),
+
+  backBtn: { 
+    padding: '8px 16px', 
+    background: '#fff', 
+    border: '1.5px solid #E2EFE6', 
+    borderRadius: 8, 
+    color: '#6B7280', 
+    cursor: 'pointer', 
+    fontSize: 13, 
+    fontWeight: 500, 
+    flexShrink: 0, 
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)' 
+  },
+
   pageTitle: { fontSize: 28, fontWeight: 800, color: '#1B1B1B', fontFamily: 'Poppins, sans-serif' },
   pageSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
-  layout: { display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' },
-  formCard: { background: '#fff', border: '1px solid #E2EFE6', borderRadius: 16, padding: 32, boxShadow: '0 4px 16px rgba(46,125,50,0.08)' },
+
+  layout: (isMobile) => ({
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 300px',
+    gap: isMobile ? 32 : 24,
+    alignItems: 'start'
+  }),
+
+  formCard: (isMobile) => ({
+    background: '#fff',
+    border: '1px solid #E2EFE6',
+    borderRadius: 16,
+    padding: isMobile ? 24 : 32,
+    boxShadow: '0 4px 16px rgba(46,125,50,0.08)'
+  }),
+
   section: { marginBottom: 28 },
   sectionLabel: { fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16 },
-  typeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 },
-  typeBtn: { padding: '16px 12px', background: '#F9FBF9', border: '2px solid #E2EFE6', borderRadius: 12, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, transition: 'all 0.2s' },
+
+  typeGrid: (isMobile) => ({
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
+    gap: 12
+  }),
+
+  typeBtn: { 
+    padding: '16px 12px', 
+    background: '#F9FBF9', 
+    border: '2px solid #E2EFE6', 
+    borderRadius: 12, 
+    cursor: 'pointer', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    gap: 4, 
+    transition: 'all 0.2s' 
+  },
   typeBtnEmoji: { fontSize: 24, marginBottom: 2 },
   typeBtnLabel: { fontSize: 14, fontWeight: 700 },
   typeBtnDesc: { fontSize: 11, textAlign: 'center' },
-  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
+
+  grid2: (isMobile) => ({
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+    gap: 16
+  }),
+
   field: { display: 'flex', flexDirection: 'column', gap: 7 },
   label: { fontSize: 13, fontWeight: 600, color: '#374151' },
-  input: { padding: '11px 14px', background: '#F9FBF9', border: '1.5px solid #E2EFE6', borderRadius: 10, color: '#1B1B1B', fontSize: 14, width: '100%', boxSizing: 'border-box', transition: 'all 0.2s' },
-  uploadBox: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '28px', background: '#F9FBF9', border: '2px dashed #A5D6A7', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' },
+  input: { 
+    padding: '11px 14px', 
+    background: '#F9FBF9', 
+    border: '1.5px solid #E2EFE6', 
+    borderRadius: 10, 
+    color: '#1B1B1B', 
+    fontSize: 14, 
+    width: '100%', 
+    boxSizing: 'border-box', 
+    transition: 'all 0.2s' 
+  },
+
+  uploadBox: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    gap: 8, 
+    padding: '32px 20px', 
+    background: '#F9FBF9', 
+    border: '2px dashed #A5D6A7', 
+    borderRadius: 12, 
+    cursor: 'pointer', 
+    transition: 'all 0.2s' 
+  },
   uploadIcon: { fontSize: 36 },
   uploadText: { fontSize: 15, color: '#374151', fontWeight: 600 },
   uploadHint: { fontSize: 12, color: '#9CA3AF' },
+
   previews: { display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' },
   previewBox: { width: 76, height: 76, borderRadius: 10, overflow: 'hidden', border: '1.5px solid #E2EFE6' },
   previewImg: { width: '100%', height: '100%', objectFit: 'cover' },
-  btnRow: { display: 'flex', gap: 12, justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid #F1F8F4' },
-  cancelBtn: { padding: '12px 24px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: 10, color: '#6B7280', cursor: 'pointer', fontSize: 14, fontWeight: 500 },
-  submitBtn: { padding: '12px 28px', background: 'linear-gradient(135deg, #2E7D32, #1B5E20)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 16px rgba(46,125,50,0.3)' },
-  sidebar: { display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 80 },
+
+  btnRow: (isMobile) => ({
+    display: 'flex',
+    gap: 12,
+    justifyContent: isMobile ? 'stretch' : 'flex-end',
+    paddingTop: 8,
+    borderTop: '1px solid #F1F8F4',
+    flexDirection: isMobile ? 'column' : 'row'
+  }),
+
+  cancelBtn: { 
+    padding: '12px 24px', 
+    background: '#F3F4F6', 
+    border: '1px solid #E5E7EB', 
+    borderRadius: 10, 
+    color: '#6B7280', 
+    cursor: 'pointer', 
+    fontSize: 14, 
+    fontWeight: 500,
+    flex: 1
+  },
+  submitBtn: { 
+    padding: '12px 28px', 
+    background: 'linear-gradient(135deg, #2E7D32, #1B5E20)', 
+    color: '#fff', 
+    border: 'none', 
+    borderRadius: 10, 
+    fontSize: 15, 
+    fontWeight: 600, 
+    cursor: 'pointer', 
+    boxShadow: '0 4px 16px rgba(46,125,50,0.3)',
+    flex: 1
+  },
+
+  sidebar: (isMobile) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+    position: isMobile ? 'static' : 'sticky',
+    top: 80
+  }),
+
   previewCard: { background: '#fff', border: '1px solid #E2EFE6', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 8px rgba(46,125,50,0.06)' },
   previewLabel: { fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: 1.2, padding: '14px 16px 0' },
   itemPreview: {},
@@ -359,11 +489,13 @@ const s = {
   previewTitle: { fontSize: 15, fontWeight: 700, color: '#1B1B1B', marginBottom: 8, fontFamily: 'Poppins, sans-serif' },
   previewPrice: { fontSize: 20, fontWeight: 800, marginBottom: 8, fontFamily: 'Poppins, sans-serif' },
   typePill: { display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700 },
+
   tipsCard: { background: '#fff', border: '1px solid #E2EFE6', borderRadius: 14, padding: '18px 20px', boxShadow: '0 2px 8px rgba(46,125,50,0.06)' },
   tipsTitle: { fontSize: 14, fontWeight: 700, color: '#1B1B1B', marginBottom: 14 },
   tip: { display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
   tipCheck: { width: 18, height: 18, borderRadius: '50%', background: '#E8F5E9', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0, marginTop: 1 },
   tipText: { fontSize: 13, color: '#6B7280', lineHeight: 1.4 },
+
   guidelinesCard: { background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 14, padding: '16px 18px' },
   guidelinesTitle: { fontSize: 13, fontWeight: 700, color: '#92400E', marginBottom: 8 },
   guidelinesText: { fontSize: 12, color: '#78350F', lineHeight: 1.6 },
