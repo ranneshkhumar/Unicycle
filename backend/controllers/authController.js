@@ -8,7 +8,7 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
-// ✅ EMAIL CONFIG (USE ENV VARIABLES — VERY IMPORTANT)
+// ✅ EMAIL CONFIG
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -21,13 +21,15 @@ const transporter = nodemailer.createTransport({
 const register = async (req, res) => {
   try {
     const { name, password, university } = req.body;
-    const email = req.body.email.toLowerCase(); // ✅ FIX CASE ISSUE
+    const email = req.body.email.toLowerCase();
 
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Please provide name, email and password' });
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide name, email and password'
+      });
     }
 
-    // ✅ College email validation
     const allowedDomain = 'rajalakshmi.edu.in';
     const emailDomain = email.split('@')[1];
 
@@ -38,19 +40,19 @@ const register = async (req, res) => {
       });
     }
 
-    // ✅ CASE-INSENSITIVE CHECK
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Email already registered' });
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered'
+      });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ✅ GENERATE VERIFICATION TOKEN
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    // ✅ CREATE USER (NOT VERIFIED)
     const user = await User.create({
       name,
       email,
@@ -60,10 +62,16 @@ const register = async (req, res) => {
       verificationToken
     });
 
-    // ✅ SEND EMAIL (USES DEPLOYED FRONTEND URL)
     const verifyLink = `${process.env.CLIENT_URL}/verify/${verificationToken}`;
 
-    await transporter.sendMail({
+    // ✅ SEND RESPONSE FIRST (NO MORE TIMEOUT)
+    res.status(201).json({
+      success: true,
+      message: 'Verification email sent. Please check your inbox.'
+    });
+
+    // ✅ SEND EMAIL ASYNC (NON-BLOCKING)
+    transporter.sendMail({
       from: `"Unicycle" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Verify your email',
@@ -72,11 +80,13 @@ const register = async (req, res) => {
         <p>Click below to verify your account:</p>
         <a href="${verifyLink}">${verifyLink}</a>
       `
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Verification email sent. Please check your inbox.'
+    })
+    .then(() => {
+      console.log("✅ Email sent to:", email);
+    })
+    .catch(err => {
+      console.error("❌ Email failed:", err.message);
+      console.log("🔗 VERIFY LINK (manual):", verifyLink);
     });
 
   } catch (error) {
@@ -91,18 +101,17 @@ const verifyEmail = async (req, res) => {
     const user = await User.findOne({ verificationToken: req.params.token });
 
     if (!user) {
-      return res.send('Invalid or expired token');
+      return res.json({ success: false, message: 'Invalid or expired token' });
     }
 
     user.isVerified = true;
     user.verificationToken = null;
     await user.save();
 
-    // ✅ BETTER UX (redirect instead of plain text)
-   res.json({ success: true, message: 'Email verified' });
+    res.json({ success: true, message: 'Email verified' });
 
   } catch (error) {
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -110,23 +119,31 @@ const verifyEmail = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { password } = req.body;
-    const email = req.body.email.toLowerCase(); // ✅ FIX CASE ISSUE
+    const email = req.body.email.toLowerCase();
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Please provide email and password' });
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
     }
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
     }
 
-    // ✅ BLOCK IF NOT VERIFIED
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
@@ -135,7 +152,10 @@ const login = async (req, res) => {
     }
 
     if (!user.isActive) {
-      return res.status(401).json({ success: false, message: 'Your account has been deactivated' });
+      return res.status(401).json({
+        success: false,
+        message: 'Your account has been deactivated'
+      });
     }
 
     const token = generateToken(user._id);
