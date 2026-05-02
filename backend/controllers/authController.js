@@ -2,20 +2,13 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
-
-// ✅ EMAIL CONFIG
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
 
 // ================= REGISTER =================
 const register = async (req, res) => {
@@ -30,6 +23,7 @@ const register = async (req, res) => {
       });
     }
 
+    // ✅ College email validation
     const allowedDomain = 'rajalakshmi.edu.in';
     const emailDomain = email.split('@')[1];
 
@@ -40,6 +34,7 @@ const register = async (req, res) => {
       });
     }
 
+    // ✅ Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -48,12 +43,15 @@ const register = async (req, res) => {
       });
     }
 
+    // ✅ Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // ✅ Generate token
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    const user = await User.create({
+    // ✅ Create user
+    await User.create({
       name,
       email,
       password: hashedPassword,
@@ -64,30 +62,33 @@ const register = async (req, res) => {
 
     const verifyLink = `${process.env.CLIENT_URL}/verify/${verificationToken}`;
 
-    // ✅ SEND RESPONSE FIRST (NO MORE TIMEOUT)
+    // ✅ Send response immediately (no delay)
     res.status(201).json({
       success: true,
       message: 'Verification email sent. Please check your inbox.'
     });
 
-    // ✅ SEND EMAIL ASYNC (NON-BLOCKING)
-    transporter.sendMail({
-      from: `"Unicycle" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Verify your email',
-      html: `
-        <h3>Email Verification</h3>
-        <p>Click below to verify your account:</p>
-        <a href="${verifyLink}">${verifyLink}</a>
-      `
-    })
-    .then(() => {
-      console.log("✅ Email sent to:", email);
-    })
-    .catch(err => {
-      console.error("❌ Email failed:", err.message);
-      console.log("🔗 VERIFY LINK (manual):", verifyLink);
-    });
+    // ✅ Send email asynchronously (non-blocking)
+    (async () => {
+      try {
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: email,
+          subject: 'Verify your email',
+          html: `
+            <h3>Email Verification</h3>
+            <p>Click below to verify your account:</p>
+            <a href="${verifyLink}">${verifyLink}</a>
+          `
+        });
+
+        console.log("✅ Email sent to:", email);
+
+      } catch (err) {
+        console.error("❌ Email failed:", err.message);
+        console.log("🔗 Manual verification link:", verifyLink);
+      }
+    })();
 
   } catch (error) {
     console.error('Register error:', error.message);
@@ -101,17 +102,27 @@ const verifyEmail = async (req, res) => {
     const user = await User.findOne({ verificationToken: req.params.token });
 
     if (!user) {
-      return res.json({ success: false, message: 'Invalid or expired token' });
+      return res.json({
+        success: false,
+        message: 'Invalid or expired token'
+      });
     }
 
     user.isVerified = true;
     user.verificationToken = null;
     await user.save();
 
-    res.json({ success: true, message: 'Email verified' });
+    res.json({
+      success: true,
+      message: 'Email verified successfully'
+    });
 
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Verify error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
 };
 
@@ -129,6 +140,7 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email }).select('+password');
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -137,6 +149,7 @@ const login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -144,6 +157,7 @@ const login = async (req, res) => {
       });
     }
 
+    // ✅ Check verification
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
@@ -151,6 +165,7 @@ const login = async (req, res) => {
       });
     }
 
+    // ✅ Check active status
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -175,7 +190,10 @@ const login = async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error.message);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
@@ -183,10 +201,23 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    res.json({ success: true, user });
+
+    res.json({
+      success: true,
+      user
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
-module.exports = { register, login, getMe, verifyEmail };
+module.exports = {
+  register,
+  login,
+  getMe,
+  verifyEmail
+};
