@@ -23,7 +23,6 @@ const register = async (req, res) => {
       });
     }
 
-    // ✅ College email validation
     const allowedDomain = 'rajalakshmi.edu.in';
     const emailDomain = email.split('@')[1];
 
@@ -34,7 +33,6 @@ const register = async (req, res) => {
       });
     }
 
-    // ✅ Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -43,14 +41,11 @@ const register = async (req, res) => {
       });
     }
 
-    // ✅ Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ✅ Generate token
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    // ✅ Create user
     await User.create({
       name,
       email,
@@ -62,33 +57,33 @@ const register = async (req, res) => {
 
     const verifyLink = `${process.env.CLIENT_URL}/verify/${verificationToken}`;
 
-    // ✅ Send response immediately (no delay)
+    // ✅ Send response immediately
     res.status(201).json({
       success: true,
       message: 'Verification email sent. Please check your inbox.'
     });
 
-    // ✅ Send email asynchronously (non-blocking)
-    (async () => {
-      try {
-        await resend.emails.send({
-          from: 'onboarding@resend.dev',
-          to: email,
-          subject: 'Verify your email',
-          html: `
-            <h3>Email Verification</h3>
-            <p>Click below to verify your account:</p>
-            <a href="${verifyLink}">${verifyLink}</a>
-          `
-        });
+    // ✅ DEBUG LOG
+    console.log("🚀 Sending email to:", email);
 
-        console.log("✅ Email sent to:", email);
-
-      } catch (err) {
-        console.error("❌ Email failed:", err.message);
-        console.log("🔗 Manual verification link:", verifyLink);
-      }
-    })();
+    // ✅ SEND EMAIL (FIXED VERSION)
+    resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: email,
+      subject: 'Verify your email',
+      html: `
+        <h3>Email Verification</h3>
+        <p>Click below to verify your account:</p>
+        <a href="${verifyLink}">${verifyLink}</a>
+      `
+    })
+    .then(() => {
+      console.log("✅ Email sent to:", email);
+    })
+    .catch((err) => {
+      console.error("❌ Email failed:", err.message);
+      console.log("🔗 Manual link:", verifyLink);
+    });
 
   } catch (error) {
     console.error('Register error:', error.message);
@@ -157,7 +152,6 @@ const login = async (req, res) => {
       });
     }
 
-    // ✅ Check verification
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
@@ -165,7 +159,6 @@ const login = async (req, res) => {
       });
     }
 
-    // ✅ Check active status
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
