@@ -21,6 +21,7 @@ const transporter = nodemailer.createTransport({
     user: process.env.BREVO_USER,
     pass: process.env.BREVO_PASS,
   },
+  connectionTimeout: 10000,
 });
 
 // ================= REGISTER =================
