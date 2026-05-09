@@ -69,7 +69,7 @@ const register = async (req, res) => {
 
     // ✅ SEND EMAIL (FIXED VERSION)
     resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'Unicycle <unicycle.admin@gmail.com>',
       to: email,
       subject: 'Verify your email',
       html: `
