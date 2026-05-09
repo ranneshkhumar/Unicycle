@@ -23,15 +23,16 @@ const register = async (req, res) => {
       });
     }
 
-    const allowedDomain = 'rajalakshmi.edu.in';
-    const emailDomain = email.split('@')[1];
+  //   const allowedDomain = 'rajalakshmi.edu.in';
+  //   const emailDomain = email.split('@')[1];
 
-    if (emailDomain !== allowedDomain) {
-      return res.status(400).json({
-        success: false,
-        message: '❌ Only @rajalakshmi.edu.in emails allowed',
-      });
-    }
+  //  // if (emailDomain !== allowedDomain) 
+  //  {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: '❌ Only @rajalakshmi.edu.in emails allowed',
+  //     });
+  //   }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
