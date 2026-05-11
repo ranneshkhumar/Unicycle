@@ -12,6 +12,8 @@ import ItemDetail from './pages/ItemDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Messages from './pages/Messages';
 import Verify from './pages/Verify';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -43,6 +45,9 @@ function App() {
         <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
 <Route path="/messages/:userId" element={<PrivateRoute><Messages /></PrivateRoute>} />
 <Route path="/verify/:token" element={<Verify />} />
+<Route path="/forgot-password" element={<ForgotPassword />} />
+
+<Route path="/reset-password/:token" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
   );
