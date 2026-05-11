@@ -22,18 +22,32 @@ const sendVerificationEmail = async (toEmail, verifyLink) => {
     body: JSON.stringify({
       sender: {
         name: 'Unicycle',
-        email: process.env.BREVO_SENDER_EMAIL, // unicycle.admin@gmail.com
+        email: process.env.BREVO_SENDER_EMAIL,
       },
       to: [{ email: toEmail }],
       subject: 'Verify your Unicycle account',
       htmlContent: `
         <h2>Welcome to Unicycle!</h2>
-        <p>Click the link below to verify your email address:</p>
-        <a href="${verifyLink}" style="padding:10px 20px;background:#4F46E5;color:#fff;border-radius:6px;text-decoration:none;">
+        <p>Click the button below to verify your email address:</p>
+
+        <a href="${verifyLink}" 
+           style="
+             display:inline-block;
+             padding:12px 24px;
+             background:#4F46E5;
+             color:#ffffff;
+             text-decoration:none;
+             border-radius:8px;
+             margin-top:15px;
+           ">
           Verify Email
         </a>
-        <p>Or copy this link: ${verifyLink}</p>
-        <p>This link does not expire.</p>
+
+        <p style="margin-top:20px;">
+          If the button does not work, use this link:
+        </p>
+
+        <p>${verifyLink}</p>
       `,
     }),
   });
@@ -52,6 +66,7 @@ const register = async (req, res) => {
   try {
     const { name, email, password, university } = req.body;
 
+    // ✅ Required fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -59,7 +74,23 @@ const register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    // ✅ ONLY rajalakshmi.edu.in emails allowed
+    const allowedDomain = 'rajalakshmi.edu.in';
+
+    const emailDomain = email.toLowerCase().split('@')[1];
+
+    if (emailDomain !== allowedDomain) {
+      return res.status(400).json({
+        success: false,
+        message: 'Only rajalakshmi.edu.in email addresses are allowed',
+      });
+    }
+
+    // ✅ Check existing user
+    const existingUser = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -67,10 +98,14 @@ const register = async (req, res) => {
       });
     }
 
+    // ✅ Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    // ✅ Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
+    // ✅ Create user
     const user = await User.create({
       name,
       email: email.toLowerCase(),
@@ -80,8 +115,10 @@ const register = async (req, res) => {
       isVerified: false,
     });
 
+    // ✅ Verification link
     const verifyLink = `${process.env.CLIENT_URL}/verify/${verificationToken}`;
 
+    // ✅ Send email
     await sendVerificationEmail(email, verifyLink);
 
     res.status(201).json({
@@ -91,6 +128,7 @@ const register = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Register Error:', error.message);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -101,7 +139,9 @@ const register = async (req, res) => {
 // ================= VERIFY EMAIL =================
 const verifyEmail = async (req, res) => {
   try {
-    const user = await User.findOne({ verificationToken: req.params.token });
+    const user = await User.findOne({
+      verificationToken: req.params.token,
+    });
 
     if (!user) {
       return res.status(400).json({
@@ -112,6 +152,7 @@ const verifyEmail = async (req, res) => {
 
     user.isVerified = true;
     user.verificationToken = null;
+
     await user.save();
 
     res.json({
@@ -121,6 +162,7 @@ const verifyEmail = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Verify Error:', error.message);
+
     res.status(500).json({
       success: false,
       message: 'Server Error',
@@ -133,6 +175,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // ✅ Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -140,17 +183,29 @@ const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    // ✅ Find user
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+    }).select('+password');
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
     }
 
+    // ✅ Compare password
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
     }
 
+    // ✅ Check verification
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
@@ -158,6 +213,7 @@ const login = async (req, res) => {
       });
     }
 
+    // ✅ Generate token
     const token = generateToken(user._id);
 
     res.json({
@@ -175,7 +231,11 @@ const login = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Login Error:', error.message);
-    res.status(500).json({ success: false, message: error.message });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -183,11 +243,25 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    res.json({ success: true, user });
+
+    res.json({
+      success: true,
+      user,
+    });
+
   } catch (error) {
     console.error('❌ GetMe Error:', error.message);
-    res.status(500).json({ success: false, message: error.message });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-module.exports = { register, login, getMe, verifyEmail };
+module.exports = {
+  register,
+  login,
+  getMe,
+  verifyEmail,
+};
