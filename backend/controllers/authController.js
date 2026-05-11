@@ -259,9 +259,154 @@ const getMe = async (req, res) => {
   }
 };
 
+// ================= ADD THESE FUNCTIONS ABOVE module.exports =================
+
+// ================= FORGOT PASSWORD =================
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // ✅ Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    user.resetPasswordToken = resetToken;
+
+    // ✅ Token expires in 15 mins
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    // ✅ Reset link
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    // ✅ Send email using Brevo
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'Unicycle',
+          email: process.env.BREVO_SENDER_EMAIL,
+        },
+        to: [{ email }],
+        subject: 'Reset your password',
+        htmlContent: `
+          <h2>Password Reset</h2>
+
+          <p>Click the button below to reset your password:</p>
+
+          <a href="${resetLink}" 
+             style="
+               display:inline-block;
+               padding:12px 24px;
+               background:#DC2626;
+               color:white;
+               border-radius:8px;
+               text-decoration:none;
+               margin-top:10px;
+             ">
+             Reset Password
+          </a>
+
+          <p style="margin-top:20px;">
+            This link expires in 15 minutes.
+          </p>
+
+          <p>
+            If button does not work:
+          </p>
+
+          <p>${resetLink}</p>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      console.error('❌ Brevo Forgot Password Error:', JSON.stringify(err));
+
+      throw new Error(err.message || 'Email send failed');
+    }
+
+    console.log('✅ Reset email sent to:', email);
+
+    res.json({
+      success: true,
+      message: 'Password reset email sent successfully',
+    });
+
+  } catch (error) {
+    console.error('❌ Forgot Password Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ================= RESET PASSWORD =================
+const resetPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token',
+      });
+    }
+
+    // ✅ Hash new password
+    const salt = await bcrypt.genSalt(10);
+
+    user.password = await bcrypt.hash(req.body.password, salt);
+
+    // ✅ Clear reset fields
+    user.resetPasswordToken = undefined;
+
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successful',
+    });
+
+  } catch (error) {
+    console.error('❌ Reset Password Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   verifyEmail,
+  forgotPassword,
+  resetPassword,
 };
