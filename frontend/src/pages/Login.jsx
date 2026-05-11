@@ -87,26 +87,44 @@ export default function Login() {
               </div>
             </div>
 
-            <div style={s.field}>
-              <label style={s.label}>Password</label>
-              <div style={{ ...s.inputWrap, ...(focused === 'password' ? s.inputFocused : {}) }}>
-                <span style={s.inputIcon}>🔑</span>
-                <input
-                  style={s.input}
-                  type="password"
-                  placeholder="Enter your password"
-                  value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
-                  onFocus={() => setFocused('password')}
-                  onBlur={() => setFocused('')}
-                  required
-                />
-              </div>
-            </div>
+           <div style={s.field}>
+  <label style={s.label}>Password</label>
 
-            <button style={{ ...s.btn, ...(loading ? s.btnLoading : {}) }} type="submit" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
+  <div
+    style={{
+      ...s.inputWrap,
+      ...(focused === 'password' ? s.inputFocused : {}),
+    }}
+  >
+    <span style={s.inputIcon}>🔑</span>
+
+    <input
+      style={s.input}
+      type="password"
+      placeholder="Enter your password"
+      value={form.password}
+      onChange={e => setForm({ ...form, password: e.target.value })}
+      onFocus={() => setFocused('password')}
+      onBlur={() => setFocused('')}
+      required
+    />
+  </div>
+
+  {/* ✅ Forgot Password */}
+  <div style={s.forgotWrap}>
+    <Link to="/forgot-password" style={s.forgotLink}>
+      Forgot Password?
+    </Link>
+  </div>
+</div>
+
+<button
+  style={{ ...s.btn, ...(loading ? s.btnLoading : {}) }}
+  type="submit"
+  disabled={loading}
+>
+  {loading ? 'Signing in...' : 'Sign In'}
+</button>
           </form>
 
           <div style={s.divider}>
@@ -277,4 +295,17 @@ const s = {
     fontSize: 14,
     fontWeight: 600,
   },
+  btnLoading: { opacity: 0.7, cursor: 'not-allowed' },
+  forgotWrap: {
+  display: 'flex',
+  justifyContent: 'flex-end',
+  marginTop: 8,
+},
+
+forgotLink: {
+  fontSize: 13,
+  color: '#2563EB',
+  textDecoration: 'none',
+  fontWeight: 600,
+},
 };
