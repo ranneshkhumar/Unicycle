@@ -1,8 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-
 const User = require('../models/User');
 
 // ================= JWT TOKEN =================
@@ -12,24 +10,48 @@ const generateToken = (id) => {
   });
 };
 
-// ================= BREVO TRANSPORTER =================
-const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_USER,
-    pass: process.env.BREVO_PASS,
-  },
-  connectionTimeout: 10000,
-});
+// ================= BREVO HTTP API =================
+const sendVerificationEmail = async (toEmail, verifyLink) => {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: {
+        name: 'Unicycle',
+        email: process.env.BREVO_SENDER_EMAIL, // unicycle.admin@gmail.com
+      },
+      to: [{ email: toEmail }],
+      subject: 'Verify your Unicycle account',
+      htmlContent: `
+        <h2>Welcome to Unicycle!</h2>
+        <p>Click the link below to verify your email address:</p>
+        <a href="${verifyLink}" style="padding:10px 20px;background:#4F46E5;color:#fff;border-radius:6px;text-decoration:none;">
+          Verify Email
+        </a>
+        <p>Or copy this link: ${verifyLink}</p>
+        <p>This link does not expire.</p>
+      `,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    console.error('❌ Brevo API Error:', JSON.stringify(err));
+    throw new Error(`Brevo API error: ${err.message || JSON.stringify(err)}`);
+  }
+
+  console.log('✅ Verification email sent to:', toEmail);
+};
 
 // ================= REGISTER =================
 const register = async (req, res) => {
   try {
     const { name, email, password, university } = req.body;
 
-    // ✅ Validate fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -37,11 +59,7 @@ const register = async (req, res) => {
       });
     }
 
-    // ✅ Check existing user
-    const existingUser = await User.findOne({
-      email: email.toLowerCase(),
-    });
-
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -49,14 +67,10 @@ const register = async (req, res) => {
       });
     }
 
-    // ✅ Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    // ✅ Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    // ✅ Create user
     const user = await User.create({
       name,
       email: email.toLowerCase(),
@@ -66,33 +80,17 @@ const register = async (req, res) => {
       isVerified: false,
     });
 
-    // ✅ Verification link
     const verifyLink = `${process.env.CLIENT_URL}/verify/${verificationToken}`;
 
-    console.log('🚀 Sending email to:', email);
-
-    // ✅ Send verification email
-    await transporter.sendMail({
-      from: `"Unicycle" <${process.env.BREVO_USER}>`,
-      to: email,
-      subject: 'Verify your email',
-      html: `
-        <h2>Email Verification</h2>
-        <p>Click below to verify your account:</p>
-        <a href="${verifyLink}">${verifyLink}</a>
-      `,
-    });
-
-    console.log('✅ Email sent to:', email);
+    await sendVerificationEmail(email, verifyLink);
 
     res.status(201).json({
       success: true,
-      message: 'Verification email sent successfully',
+      message: 'Verification email sent. Please check your inbox.',
     });
 
   } catch (error) {
     console.error('❌ Register Error:', error.message);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -103,9 +101,7 @@ const register = async (req, res) => {
 // ================= VERIFY EMAIL =================
 const verifyEmail = async (req, res) => {
   try {
-    const user = await User.findOne({
-      verificationToken: req.params.token,
-    });
+    const user = await User.findOne({ verificationToken: req.params.token });
 
     if (!user) {
       return res.status(400).json({
@@ -116,17 +112,15 @@ const verifyEmail = async (req, res) => {
 
     user.isVerified = true;
     user.verificationToken = null;
-
     await user.save();
 
     res.json({
       success: true,
-      message: 'Email verified successfully',
+      message: 'Email verified successfully. You can now log in.',
     });
 
   } catch (error) {
     console.error('❌ Verify Error:', error.message);
-
     res.status(500).json({
       success: false,
       message: 'Server Error',
@@ -139,7 +133,6 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ✅ Check fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -147,37 +140,24 @@ const login = async (req, res) => {
       });
     }
 
-    // ✅ Find user
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-    }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // ✅ Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // ✅ Check verification
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
-        message: 'Please verify your email first',
+        message: 'Please verify your email before logging in.',
       });
     }
 
-    // ✅ Generate token
     const token = generateToken(user._id);
 
     res.json({
@@ -195,11 +175,7 @@ const login = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Login Error:', error.message);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -207,25 +183,11 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-
-    res.json({
-      success: true,
-      user,
-    });
-
+    res.json({ success: true, user });
   } catch (error) {
     console.error('❌ GetMe Error:', error.message);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-module.exports = {
-  register,
-  login,
-  getMe,
-  verifyEmail,
-};
+module.exports = { register, login, getMe, verifyEmail };
