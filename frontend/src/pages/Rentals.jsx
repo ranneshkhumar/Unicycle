@@ -312,81 +312,88 @@ const incoming = incomingRequests;
     </div>
   );
 
-  const renderContent = () => {
-    if (loading) {
-      return <div style={s.loading}>Loading...</div>;
+ const renderContent = () => {
+  if (loading) {
+    return <div style={s.loading}>Loading...</div>;
+  }
+
+  switch (tab) {
+
+    case 'active':
+      return active.length === 0
+        ? <Empty msg="No active rentals" />
+        : active.map(r => (
+            <RentalCard
+              key={r._id}
+              rental={r}
+              type="renting"
+            />
+          ));
+
+    case 'lending':
+      return lendingActive.length === 0
+        ? <Empty msg="No lending rentals" />
+        : lendingActive.map(r => (
+            <RentalCard
+              key={r._id}
+              rental={r}
+              type="lending"
+            />
+          ));
+
+    case 'pending':
+      return pending.length === 0
+        ? <Empty msg="No pending requests" />
+        : pending.map(r => (
+            <RequestCard
+              key={r._id}
+              request={r}
+              type="sent"
+            />
+          ));
+
+    case 'incoming':
+      return incoming.length === 0
+        ? <Empty msg="No incoming requests" />
+        : incoming.map(r => (
+            <RequestCard
+              key={r._id}
+              request={r}
+              type="incoming"
+            />
+          ));
+
+    case 'completed': {
+
+      const allCompleted = [
+
+        ...completed.map(r => ({
+          ...r,
+          viewType: 'renting'
+        })),
+
+        ...lendingCompleted.map(r => ({
+          ...r,
+          viewType: 'lending'
+        })),
+
+      ];
+
+      return allCompleted.length === 0
+        ? <Empty msg="No completed rentals" />
+        : allCompleted.map(r => (
+            <RentalCard
+              key={r._id}
+              rental={r}
+              type={r.viewType}
+            />
+          ));
     }
 
-    switch (tab) {
-      case 'active':
-        return active.length === 0
-          ? <Empty msg="No active rentals" />
-          : active.map(r => (
-              <RentalCard
-                key={r._id}
-                rental={r}
-                type="renting"
-              />
-            ));
-
-      case 'lending':
-        return lendingActive.length === 0
-          ? <Empty msg="No lending rentals" />
-          : lendingActive.map(r => (
-              <RentalCard
-                key={r._id}
-                rental={r}
-                type="lending"
-              />
-            ));
-
-      case 'pending':
-        return pending.length === 0
-          ? <Empty msg="No pending requests" />
-          : pending.map(r => (
-              <RequestCard
-                key={r._id}
-                request={r}
-                type="sent"
-              />
-            ));
-
-      case 'incoming':
-        return incoming.length === 0
-          ? <Empty msg="No incoming requests" />
-          : incoming.map(r => (
-              <RequestCard
-                key={r._id}
-                request={r}
-                type="incoming"
-              />
-            ));
-
-      case 'completed': {
-  const allCompleted = [
-    ...completed.map(r => ({
-      ...r,
-      viewType: 'renting'
-    })),
-
-    ...lendingCompleted.map(r => ({
-      ...r,
-      viewType: 'lending'
-    })),
-  ];
-
-  return allCompleted.length === 0
-    ? <Empty msg="No completed rentals" />
-    : allCompleted.map(r => (
-        <RentalCard
-          key={r._id}
-          rental={r}
-          type={r.viewType}
-        />
-      ));
-}
-  };
-
+    default:
+      return null;
+  }
+};
   return (
     <div style={s.page}>
       <div style={s.container}>
