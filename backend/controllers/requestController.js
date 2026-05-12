@@ -39,24 +39,76 @@ const getIncomingRequests = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 const acceptRequest = async (req, res) => {
   try {
     const request = await Request.findById(req.params.id).populate('item');
-    if (!request) return res.status(404).json({ success: false, message: 'Request not found' });
-    if (request.owner.toString() !== req.user._id.toString()) return res.status(403).json({ success: false, message: 'Not authorized' });
-    if (request.status !== 'pending') return res.status(400).json({ success: false, message: 'Request already processed' });
-    const rental = await Rental.create({ item: request.item._id, renter: request.requester, owner: request.owner, startDate: request.startDate, endDate: request.endDate, totalDays: request.totalDays, totalAmount: request.totalAmount, request: request._id, notes: request.message });
+
+    if (!request)
+      return res.status(404).json({
+        success: false,
+        message: 'Request not found',
+      });
+
+    if (request.owner.toString() !== req.user._id.toString())
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized',
+      });
+
+    if (request.status !== 'pending')
+      return res.status(400).json({
+        success: false,
+        message: 'Request already processed',
+      });
+
+    // ✅ CREATE ACTIVE RENTAL
+    const rental = await Rental.create({
+      item: request.item._id,
+      renter: request.requester,
+      owner: request.owner,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      totalDays: request.totalDays,
+      totalAmount: request.totalAmount,
+      status: 'active', // ✅ IMPORTANT FIX
+      request: request._id,
+      notes: request.message,
+    });
+
+    // ✅ UPDATE REQUEST STATUS
     request.status = 'accepted';
     request.rental = rental._id;
+
     await request.save();
-    await Item.findByIdAndUpdate(request.item._id, { isAvailable: false });
-    await Notification.create({ recipient: request.requester, type: 'request_accepted', message: `Your request for "${request.item.title}" was accepted!`, relatedItem: request.item._id, relatedRequest: request._id });
-    res.json({ success: true, message: 'Request accepted', rental });
+
+    // ✅ MAKE ITEM UNAVAILABLE
+    await Item.findByIdAndUpdate(request.item._id, {
+      isAvailable: false,
+    });
+
+    // ✅ SEND NOTIFICATION
+    await Notification.create({
+      recipient: request.requester,
+      type: 'request_accepted',
+      message: `Your request for "${request.item.title}" was accepted!`,
+      relatedItem: request.item._id,
+      relatedRequest: request._id,
+    });
+
+    res.json({
+      success: true,
+      message: 'Request accepted',
+      rental,
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
 
 const rejectRequest = async (req, res) => {
   try {
