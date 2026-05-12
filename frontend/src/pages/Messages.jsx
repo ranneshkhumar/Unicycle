@@ -27,7 +27,21 @@ export default function Messages() {
   }, []);
 
   useEffect(() => { fetchInbox(); }, []);
-  useEffect(() => { if (activeConv) fetchConversation(activeConv); }, [activeConv]);
+  useEffect(() => {
+  if (!activeConv) return;
+
+  // Initial fetch
+  fetchConversation(activeConv);
+
+  // Auto refresh every 2 seconds
+  const interval = setInterval(() => {
+    fetchConversation(activeConv);
+  }, 2000);
+
+  // Cleanup
+  return () => clearInterval(interval);
+
+}, [activeConv]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   // Auto open chat if coming from URL param
