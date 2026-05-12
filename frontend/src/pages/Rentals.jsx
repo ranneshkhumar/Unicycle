@@ -71,21 +71,32 @@ export default function Rentals() {
     }
   };
 
-  const active = myRentals.filter(r => r.status === 'active');
+  // ✅ ACTIVE RENTALS
+const active = myRentals.filter(
+  r => r.status === 'active'
+);
 
-  const lendingActive = lendingRentals.filter(
-    r => r.status === 'active'
-  );
+// ✅ ACTIVE LENDING
+const lendingActive = lendingRentals.filter(
+  r => r.status === 'active'
+);
 
-  const completed = myRentals.filter(
-    r => r.status === 'completed'
-  );
+// ✅ COMPLETED RENTALS
+const completed = myRentals.filter(
+  r => r.status === 'completed'
+);
 
-  const pending = myRequests.filter(
-    r => r.status === 'pending'
-  );
+// ✅ COMPLETED LENDING
+const lendingCompleted = lendingRentals.filter(
+  r => r.status === 'completed'
+);
 
-  const incoming = incomingRequests;
+// ✅ PENDING REQUESTS
+const pending = myRequests.filter(
+  r => r.status === 'pending'
+);
+
+const incoming = incomingRequests;
 
   const tabs = [
     { key: 'active', label: '🟢 Active', count: active.length },
@@ -105,10 +116,10 @@ export default function Rentals() {
     },
 
     {
-      key: 'completed',
-      label: '✅ Completed',
-      count: completed.length
-    },
+  key: 'completed',
+  label: '✅ Completed',
+  count: completed.length + lendingCompleted.length
+},
   ];
 
   const getStatusStyle = (status) => {
@@ -351,20 +362,29 @@ export default function Rentals() {
               />
             ));
 
-      case 'completed':
-        return completed.length === 0
-          ? <Empty msg="No completed rentals" />
-          : completed.map(r => (
-              <RentalCard
-                key={r._id}
-                rental={r}
-                type="renting"
-              />
-            ));
+      case 'completed': {
+  const allCompleted = [
+    ...completed.map(r => ({
+      ...r,
+      viewType: 'renting'
+    })),
 
-      default:
-        return null;
-    }
+    ...lendingCompleted.map(r => ({
+      ...r,
+      viewType: 'lending'
+    })),
+  ];
+
+  return allCompleted.length === 0
+    ? <Empty msg="No completed rentals" />
+    : allCompleted.map(r => (
+        <RentalCard
+          key={r._id}
+          rental={r}
+          type={r.viewType}
+        />
+      ));
+}
   };
 
   return (
