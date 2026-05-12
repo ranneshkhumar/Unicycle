@@ -28,7 +28,11 @@ const getLendingRentals = async (req, res) => {
 
 const markReturned = async (req, res) => {
   try {
+    console.log("🚀 Mark returned called");
+
     const rental = await Rental.findById(req.params.id).populate('item');
+
+    console.log("📦 Rental:", rental);
 
     if (!rental) {
       return res.status(404).json({
@@ -37,10 +41,12 @@ const markReturned = async (req, res) => {
       });
     }
 
-    // ✅ Handle populated/non-populated owner safely
     const ownerId = rental.owner._id
       ? rental.owner._id.toString()
       : rental.owner.toString();
+
+    console.log("👤 Owner ID:", ownerId);
+    console.log("👤 Current User:", req.user._id.toString());
 
     if (ownerId !== req.user._id.toString()) {
       return res.status(403).json({
@@ -54,18 +60,22 @@ const markReturned = async (req, res) => {
 
     await rental.save();
 
-    // ✅ Make item available again
+    console.log("✅ Rental updated");
+
+    // OPTIONAL TEMPORARY
+    // COMMENT THIS BLOCK FOR TESTING
+    /*
     await Item.findByIdAndUpdate(rental.item._id, {
       isAvailable: true,
     });
 
-    // ✅ Notification
     await Notification.create({
       recipient: rental.renter,
       type: 'item_returned',
-      message: `"${rental.item.title}" marked as returned. Please leave a review!`,
+      message: `"${rental.item.title}" marked as returned.`,
       relatedItem: rental.item._id,
     });
+    */
 
     res.json({
       success: true,
@@ -73,7 +83,7 @@ const markReturned = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Mark Returned Error:', error.message);
+    console.error("❌ FULL ERROR:", error);
 
     res.status(500).json({
       success: false,
