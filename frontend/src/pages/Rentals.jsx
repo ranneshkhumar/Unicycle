@@ -4,120 +4,292 @@ import toast from 'react-hot-toast';
 
 export default function Rentals() {
   const [tab, setTab] = useState('active');
+
   const [myRentals, setMyRentals] = useState([]);
+  const [lendingRentals, setLendingRentals] = useState([]);
+
   const [myRequests, setMyRequests] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
     setLoading(true);
+
     try {
-      const [r, req, inc] = await Promise.all([
+      const [r, lend, req, inc] = await Promise.all([
         API.get('/rentals/my-rentals'),
+        API.get('/rentals/lending'),
         API.get('/requests/my-requests'),
         API.get('/requests/incoming'),
       ]);
+
       setMyRentals(r.data.rentals);
+      setLendingRentals(lend.data.rentals);
+
       setMyRequests(req.data.requests);
       setIncomingRequests(inc.data.requests);
-    } catch { toast.error('Failed to load rentals'); }
-    finally { setLoading(false); }
+
+    } catch {
+      toast.error('Failed to load rentals');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll();
+  }, []);
 
   const handleAccept = async (id) => {
-    try { await API.put(`/requests/${id}/accept`); toast.success('Request accepted!'); fetchAll(); }
-    catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+    try {
+      await API.put(`/requests/${id}/accept`);
+      toast.success('Request accepted!');
+      fetchAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    }
   };
 
   const handleReject = async (id) => {
-    try { await API.put(`/requests/${id}/reject`); toast.success('Rejected'); fetchAll(); }
-    catch { toast.error('Failed'); }
+    try {
+      await API.put(`/requests/${id}/reject`);
+      toast.success('Rejected');
+      fetchAll();
+    } catch {
+      toast.error('Failed');
+    }
   };
 
   const handleReturn = async (id) => {
-    try { await API.put(`/rentals/${id}/return`); toast.success('Marked as returned!'); fetchAll(); }
-    catch { toast.error('Failed'); }
+    try {
+      await API.put(`/rentals/${id}/return`);
+      toast.success('Marked as returned!');
+      fetchAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    }
   };
 
   const active = myRentals.filter(r => r.status === 'active');
-  const completed = myRentals.filter(r => r.status === 'completed');
-  const pending = myRequests.filter(r => r.status === 'pending');
+
+  const lendingActive = lendingRentals.filter(
+    r => r.status === 'active'
+  );
+
+  const completed = myRentals.filter(
+    r => r.status === 'completed'
+  );
+
+  const pending = myRequests.filter(
+    r => r.status === 'pending'
+  );
+
   const incoming = incomingRequests;
 
   const tabs = [
     { key: 'active', label: '🟢 Active', count: active.length },
+
+    {
+      key: 'lending',
+      label: '📦 Lending',
+      count: lendingActive.length
+    },
+
     { key: 'pending', label: '⏳ Pending', count: pending.length },
-    { key: 'incoming', label: '📬 Incoming', count: incoming.filter(r => r.status === 'pending').length },
-    { key: 'completed', label: '✅ Completed', count: completed.length },
+
+    {
+      key: 'incoming',
+      label: '📬 Incoming',
+      count: incoming.filter(r => r.status === 'pending').length
+    },
+
+    {
+      key: 'completed',
+      label: '✅ Completed',
+      count: completed.length
+    },
   ];
 
   const getStatusStyle = (status) => {
     const map = {
-      active: { bg: '#DCFCE7', color: '#15803D', label: '● Active' },
-      completed: { bg: '#F3F4F6', color: '#6B7280', label: '✓ Completed' },
-      pending: { bg: '#FEF3C7', color: '#D97706', label: '◌ Pending' },
-      accepted: { bg: '#DCFCE7', color: '#15803D', label: '✓ Accepted' },
-      rejected: { bg: '#FEE2E2', color: '#DC2626', label: '✕ Rejected' },
+      active: {
+        bg: '#DCFCE7',
+        color: '#15803D',
+        label: '● Active'
+      },
+
+      completed: {
+        bg: '#F3F4F6',
+        color: '#6B7280',
+        label: '✓ Completed'
+      },
+
+      pending: {
+        bg: '#FEF3C7',
+        color: '#D97706',
+        label: '◌ Pending'
+      },
+
+      accepted: {
+        bg: '#DCFCE7',
+        color: '#15803D',
+        label: '✓ Accepted'
+      },
+
+      rejected: {
+        bg: '#FEE2E2',
+        color: '#DC2626',
+        label: '✕ Rejected'
+      },
     };
-    return map[status] || { bg: '#F3F4F6', color: '#6B7280', label: status };
+
+    return map[status] || {
+      bg: '#F3F4F6',
+      color: '#6B7280',
+      label: status
+    };
   };
 
   const RentalCard = ({ rental, type }) => {
     const st = getStatusStyle(rental.status);
+
     return (
       <div style={s.card}>
         <div style={s.cardImg}>
-          {rental.item?.images?.[0]
-            ? <img src={`http://localhost:5000${rental.item.images[0]}`} alt="" style={s.img} />
-            : <div style={s.noImg}>📦</div>}
+          {rental.item?.images?.[0] ? (
+            <img
+              src={`${import.meta.env.VITE_API_URL.replace('/api', '')}${rental.item.images[0]}`}
+              alt=""
+              style={s.img}
+            />
+          ) : (
+            <div style={s.noImg}>📦</div>
+          )}
         </div>
+
         <div style={s.cardBody}>
           <div style={s.cardTop}>
-            <h3 style={s.cardTitle}>{rental.item?.title}</h3>
-            <span style={{ ...s.statusPill, background: st.bg, color: st.color }}>{st.label}</span>
+            <h3 style={s.cardTitle}>
+              {rental.item?.title}
+            </h3>
+
+            <span
+              style={{
+                ...s.statusPill,
+                background: st.bg,
+                color: st.color
+              }}
+            >
+              {st.label}
+            </span>
           </div>
+
           <div style={s.cardMeta}>
-            <span style={s.metaItem}>📅 {new Date(rental.startDate).toLocaleDateString()} — {new Date(rental.endDate).toLocaleDateString()}</span>
-            <span style={s.metaItem}>💰 ₹{rental.totalAmount} · {rental.totalDays} days</span>
-            <span style={s.metaItem}>👤 {type === 'renting' ? `Owner: ${rental.owner?.name}` : `Renter: ${rental.renter?.name}`}</span>
+            <span style={s.metaItem}>
+              📅 {new Date(rental.startDate).toLocaleDateString()} — {new Date(rental.endDate).toLocaleDateString()}
+            </span>
+
+            <span style={s.metaItem}>
+              💰 ₹{rental.totalAmount} · {rental.totalDays} days
+            </span>
+
+            <span style={s.metaItem}>
+              👤 {type === 'renting'
+                ? `Owner: ${rental.owner?.name}`
+                : `Renter: ${rental.renter?.name}`}
+            </span>
           </div>
         </div>
-        {type === 'renting' && rental.status === 'active' && (
-          <button style={s.returnBtn} onClick={() => handleReturn(rental._id)}>Mark Returned</button>
-        )}
+
+        {type === 'lending' &&
+          rental.status === 'active' && (
+            <button
+              style={s.returnBtn}
+              onClick={() => handleReturn(rental._id)}
+            >
+              Mark Returned
+            </button>
+          )}
       </div>
     );
   };
 
   const RequestCard = ({ request, type }) => {
     const st = getStatusStyle(request.status);
+
     return (
       <div style={s.card}>
         <div style={s.cardImg}>
-          {request.item?.images?.[0]
-            ? <img src={`http://localhost:5000${request.item.images[0]}`} alt="" style={s.img} />
-            : <div style={s.noImg}>📦</div>}
+          {request.item?.images?.[0] ? (
+            <img
+              src={`${import.meta.env.VITE_API_URL.replace('/api', '')}${request.item.images[0]}`}
+              alt=""
+              style={s.img}
+            />
+          ) : (
+            <div style={s.noImg}>📦</div>
+          )}
         </div>
+
         <div style={s.cardBody}>
           <div style={s.cardTop}>
-            <h3 style={s.cardTitle}>{request.item?.title}</h3>
-            <span style={{ ...s.statusPill, background: st.bg, color: st.color }}>{st.label}</span>
+            <h3 style={s.cardTitle}>
+              {request.item?.title}
+            </h3>
+
+            <span
+              style={{
+                ...s.statusPill,
+                background: st.bg,
+                color: st.color
+              }}
+            >
+              {st.label}
+            </span>
           </div>
+
           <div style={s.cardMeta}>
-            <span style={s.metaItem}>📅 {new Date(request.startDate).toLocaleDateString()} — {new Date(request.endDate).toLocaleDateString()}</span>
-            <span style={s.metaItem}>💰 ₹{request.totalAmount} · {request.totalDays} days</span>
-            {type === 'incoming' && <span style={s.metaItem}>👤 From: {request.requester?.name}</span>}
-            {request.message && <span style={s.metaItem}>💬 "{request.message}"</span>}
+            <span style={s.metaItem}>
+              📅 {new Date(request.startDate).toLocaleDateString()} — {new Date(request.endDate).toLocaleDateString()}
+            </span>
+
+            <span style={s.metaItem}>
+              💰 ₹{request.totalAmount} · {request.totalDays} days
+            </span>
+
+            {type === 'incoming' && (
+              <span style={s.metaItem}>
+                👤 From: {request.requester?.name}
+              </span>
+            )}
+
+            {request.message && (
+              <span style={s.metaItem}>
+                💬 "{request.message}"
+              </span>
+            )}
           </div>
         </div>
-        {type === 'incoming' && request.status === 'pending' && (
-          <div style={s.actionBtns}>
-            <button style={s.acceptBtn} onClick={() => handleAccept(request._id)}>✓ Accept</button>
-            <button style={s.rejectBtn} onClick={() => handleReject(request._id)}>✕ Reject</button>
-          </div>
-        )}
+
+        {type === 'incoming' &&
+          request.status === 'pending' && (
+            <div style={s.actionBtns}>
+              <button
+                style={s.acceptBtn}
+                onClick={() => handleAccept(request._id)}
+              >
+                ✓ Accept
+              </button>
+
+              <button
+                style={s.rejectBtn}
+                onClick={() => handleReject(request._id)}
+              >
+                ✕ Reject
+              </button>
+            </div>
+          )}
       </div>
     );
   };
@@ -130,13 +302,68 @@ export default function Rentals() {
   );
 
   const renderContent = () => {
-    if (loading) return <div style={s.loading}>Loading...</div>;
+    if (loading) {
+      return <div style={s.loading}>Loading...</div>;
+    }
+
     switch (tab) {
-      case 'active': return active.length === 0 ? <Empty msg="No active rentals" /> : active.map(r => <RentalCard key={r._id} rental={r} type="renting" />);
-      case 'pending': return pending.length === 0 ? <Empty msg="No pending requests" /> : pending.map(r => <RequestCard key={r._id} request={r} type="sent" />);
-      case 'incoming': return incoming.length === 0 ? <Empty msg="No incoming requests" /> : incoming.map(r => <RequestCard key={r._id} request={r} type="incoming" />);
-      case 'completed': return completed.length === 0 ? <Empty msg="No completed rentals" /> : completed.map(r => <RentalCard key={r._id} rental={r} type="renting" />);
-      default: return null;
+      case 'active':
+        return active.length === 0
+          ? <Empty msg="No active rentals" />
+          : active.map(r => (
+              <RentalCard
+                key={r._id}
+                rental={r}
+                type="renting"
+              />
+            ));
+
+      case 'lending':
+        return lendingActive.length === 0
+          ? <Empty msg="No lending rentals" />
+          : lendingActive.map(r => (
+              <RentalCard
+                key={r._id}
+                rental={r}
+                type="lending"
+              />
+            ));
+
+      case 'pending':
+        return pending.length === 0
+          ? <Empty msg="No pending requests" />
+          : pending.map(r => (
+              <RequestCard
+                key={r._id}
+                request={r}
+                type="sent"
+              />
+            ));
+
+      case 'incoming':
+        return incoming.length === 0
+          ? <Empty msg="No incoming requests" />
+          : incoming.map(r => (
+              <RequestCard
+                key={r._id}
+                request={r}
+                type="incoming"
+              />
+            ));
+
+      case 'completed':
+        return completed.length === 0
+          ? <Empty msg="No completed rentals" />
+          : completed.map(r => (
+              <RentalCard
+                key={r._id}
+                rental={r}
+                type="renting"
+              />
+            ));
+
+      default:
+        return null;
     }
   };
 
@@ -145,16 +372,39 @@ export default function Rentals() {
       <div style={s.container}>
         <div style={s.header}>
           <h1 style={s.title}>My Rentals</h1>
-          <p style={s.subtitle}>Track all your rental activity in one place</p>
+
+          <p style={s.subtitle}>
+            Track all your rental activity in one place
+          </p>
         </div>
 
         <div style={s.tabs}>
           {tabs.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              style={{ ...s.tab, ...(tab === t.key ? s.tabActive : {}) }}>
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                ...s.tab,
+                ...(tab === t.key ? s.tabActive : {})
+              }}
+            >
               {t.label}
+
               {t.count > 0 && (
-                <span style={{ ...s.tabCount, background: tab === t.key ? '#2E7D32' : '#E2EFE6', color: tab === t.key ? '#fff' : '#6B7280' }}>
+                <span
+                  style={{
+                    ...s.tabCount,
+                    background:
+                      tab === t.key
+                        ? '#2E7D32'
+                        : '#E2EFE6',
+
+                    color:
+                      tab === t.key
+                        ? '#fff'
+                        : '#6B7280'
+                  }}
+                >
                   {t.count}
                 </span>
               )}
@@ -162,7 +412,9 @@ export default function Rentals() {
           ))}
         </div>
 
-        <div style={s.content}>{renderContent()}</div>
+        <div style={s.content}>
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
