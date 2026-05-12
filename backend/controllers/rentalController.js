@@ -29,16 +29,56 @@ const getLendingRentals = async (req, res) => {
 const markReturned = async (req, res) => {
   try {
     const rental = await Rental.findById(req.params.id).populate('item');
-    if (!rental) return res.status(404).json({ success: false, message: 'Rental not found' });
-    if (rental.owner.toString() !== req.user._id.toString()) return res.status(403).json({ success: false, message: 'Not authorized' });
+
+    if (!rental) {
+      return res.status(404).json({
+        success: false,
+        message: 'Rental not found',
+      });
+    }
+
+    // ✅ Handle populated/non-populated owner safely
+    const ownerId = rental.owner._id
+      ? rental.owner._id.toString()
+      : rental.owner.toString();
+
+    if (ownerId !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized',
+      });
+    }
+
     rental.status = 'completed';
     rental.returnedAt = new Date();
+
     await rental.save();
-    await Item.findByIdAndUpdate(rental.item._id, { isAvailable: true });
-    await Notification.create({ recipient: rental.renter, type: 'item_returned', message: `"${rental.item.title}" marked as returned. Please leave a review!`, relatedItem: rental.item._id });
-    res.json({ success: true, message: 'Rental completed' });
+
+    // ✅ Make item available again
+    await Item.findByIdAndUpdate(rental.item._id, {
+      isAvailable: true,
+    });
+
+    // ✅ Notification
+    await Notification.create({
+      recipient: rental.renter,
+      type: 'item_returned',
+      message: `"${rental.item.title}" marked as returned. Please leave a review!`,
+      relatedItem: rental.item._id,
+    });
+
+    res.json({
+      success: true,
+      message: 'Rental completed',
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('❌ Mark Returned Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
