@@ -170,7 +170,7 @@ const incoming = incomingRequests;
         <div style={s.cardImg}>
           {rental.item?.images?.[0] ? (
             <img
-              src={`${import.meta.env.VITE_API_URL.replace('/api', '')}${rental.item.images[0]}`}
+              src={rental.item.images[0]}
               alt=""
               style={s.img}
             />
@@ -234,7 +234,7 @@ const incoming = incomingRequests;
         <div style={s.cardImg}>
           {request.item?.images?.[0] ? (
             <img
-              src={`${import.meta.env.VITE_API_URL.replace('/api', '')}${request.item.images[0]}`}
+              src={request.item.images[0]}
               alt=""
               style={s.img}
             />
