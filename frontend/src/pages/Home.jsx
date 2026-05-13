@@ -53,8 +53,7 @@ export default function Home() {
     return { bg: '#E8F5E9', color: '#2E7D32', label: '🔄 For Rent' };
   };
 
-  const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-
+  
   return (
     <div style={s.page}>
       {/* Hero */}
@@ -168,7 +167,7 @@ export default function Home() {
                     <div style={s.cardImg}>
                       {item.images?.[0] ? (
                         <img
-                          src={`${BASE_URL}${item.images[0]}`}
+                          src={item.images[0]}
                           alt={item.title}
                           style={s.img}
                         />
