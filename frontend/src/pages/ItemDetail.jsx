@@ -15,8 +15,8 @@ const ItemDetail = () => {
   const [form, setForm] = useState({ startDate: '', endDate: '', message: '' });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // ✅ BASE URL FIX
-  const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+  
+  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -97,14 +97,14 @@ const ItemDetail = () => {
           <div>
             <div style={s.imgBox}>
               {item.images?.[0]
-                ? <img src={`${BASE_URL}${item.images[0]}`} alt={item.title} style={s.mainImg} />
+                ?<img src={item.images[0]} alt={item.title} style={s.mainImg} />
                 : <div style={s.noImg}>📦</div>}
             </div>
 
             {item.images?.length > 1 && (
               <div style={s.thumbs}>
                 {item.images.map((img, i) => (
-                  <img key={i} src={`${BASE_URL}${img}`} alt="" style={s.thumb} />
+                  <img src={item.images[0]} alt="" style={s.thumb} />
                 ))}
               </div>
             )}
