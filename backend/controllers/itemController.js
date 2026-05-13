@@ -91,10 +91,9 @@ const createItem = async (req, res) => {
     }
 
     // ✅ FIX: ensure correct image path format
-    const images = req.files && req.files.length > 0
-      ? req.files.map(f => `/uploads/${f.filename}`)
-      : [];
-
+    const images = req.files
+  ? req.files.map(file => file.path)
+  : [];
     const itemData = {
       title,
       description,
