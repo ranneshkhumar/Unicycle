@@ -104,7 +104,7 @@ const ItemDetail = () => {
             {item.images?.length > 1 && (
               <div style={s.thumbs}>
                 {item.images.map((img, i) => (
-                  <img src={item.images[0]} alt="" style={s.thumb} />
+                  <img key={i} src={img} alt="" style={s.thumb} />
                 ))}
               </div>
             )}
