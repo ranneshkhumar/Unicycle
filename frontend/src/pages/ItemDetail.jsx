@@ -122,11 +122,13 @@ const ItemDetail = () => {
               <p style={s.price}>{getPriceDisplay()}</p>
               {item.availableTo && (
   <div style={s.availableBox}>
-    📅 Available till:{' '}
-    <strong>
-      {new Date(item.availableTo).toLocaleDateString()}
-    </strong>
-  </div>
+  📅 Available till:{' '}
+  <strong>
+    {item.availableTo
+      ? new Date(item.availableTo).toLocaleDateString('en-GB')
+      : 'Not specified'}
+  </strong>
+</div>
 )}
 
 {/* Damage Penalty Warning */}
@@ -195,13 +197,14 @@ const ItemDetail = () => {
                     <div style={s.field}>
                       <label style={s.label}>Start Date</label>
                       <input
-                        style={s.input}
-                        type="date"
-                        min={new Date().toISOString().split('T')[0]}
-                        value={form.startDate}
-                        onChange={e => setForm({ ...form, startDate: e.target.value })}
-                        required
-                      />
+  style={s.input}
+  type="date"
+  min={form.startDate}
+  max={item.availableTo?.split('T')[0]}
+  value={form.endDate}
+  onChange={e => setForm({ ...form, endDate: e.target.value })}
+  required
+/>
                     </div>
 
                     <div style={s.field}>
@@ -262,7 +265,6 @@ const ItemDetail = () => {
     </div>
   );
 };
-
 /* ==================== RESPONSIVE STYLES ==================== */
 const s = {
   page: { minHeight: '100vh', background: '#f0f4f8', padding: '20px 16px' },
