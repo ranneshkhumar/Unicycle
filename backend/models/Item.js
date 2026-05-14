@@ -13,6 +13,7 @@ const itemSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   isAvailable: { type: Boolean, default: true },
   condition: { type: String, enum: ['New', 'Like New', 'Good', 'Fair'], default: 'Good' },
+  damagePenalty: { type: String, default: '' },
   rating: { type: Number, default: 0 },
   totalRatings: { type: Number, default: 0 },
   totalRentals: { type: Number, default: 0 },
