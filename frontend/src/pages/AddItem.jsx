@@ -182,11 +182,11 @@ export default function AddItem() {
 
                   {form.listingType === 'Free' && (
                     <div style={s.field}>
-                      <label style={s.label}>Available Until</label>
+                     
                       <input
                         style={s.input}
   
-                        onChange={e => setForm({ ...form, availableTo: e.target.value })}
+                        
                       />
                     </div>
                   )}
