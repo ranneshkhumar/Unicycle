@@ -81,6 +81,7 @@ const createItem = async (req, res) => {
       availableTo,
       condition,
       damagePenalty,
+      penalty,
       tags
     } = req.body;
 
@@ -104,7 +105,7 @@ const createItem = async (req, res) => {
       sellingPrice: sellingPrice ? Number(sellingPrice) : 0,
       availableFrom: availableFrom || Date.now(),
       condition: condition || 'Good',
-      damagePenalty: damagePenalty || '',
+      damagePenalty: damagePenalty || penalty || '',
       tags: tags ? tags.split(',').map(t => t.trim()) : [],
       images,
       owner: req.user._id,
