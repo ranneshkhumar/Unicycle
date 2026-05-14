@@ -180,16 +180,7 @@ export default function AddItem() {
                     </div>
                   )}
 
-                  {form.listingType === 'Free' && (
-                    <div style={s.field}>
-                     
-                      <input
-                        style={s.input}
-  
-                        
-                      />
-                    </div>
-                  )}
+                 
 
                   <div style={s.field}>
                     <label style={s.label}>Condition</label>
