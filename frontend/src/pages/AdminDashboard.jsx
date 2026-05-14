@@ -136,7 +136,7 @@ export default function AdminDashboard() {
                       <div key={item._id} style={s.listRow}>
                         <div style={s.listThumb}>
                           {item.images?.[0]
-                            ? <img src={`http://localhost:5000${item.images[0]}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ? <img src={item.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             : <span>📦</span>}
                         </div>
                         <div style={s.listInfo}>
