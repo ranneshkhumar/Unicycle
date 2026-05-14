@@ -123,7 +123,7 @@ const ItemDetail = () => {
 <p style={s.price}>{getPriceDisplay()}</p>
 
 <div style={s.availableBox}>
-  <p>DEBUG AVAILABLE</p>
+  
   📅 Available till:{' '}
   <strong>
     {item.availableTo
