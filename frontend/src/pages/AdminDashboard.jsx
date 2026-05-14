@@ -236,7 +236,7 @@ export default function AdminDashboard() {
                             <div style={s.userCell}>
                               <div style={s.listThumb}>
                                 {item.images?.[0]
-                                  ? <img src={`http://localhost:5000${item.images[0]}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ? <img src={item.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                   : <span style={{ fontSize: 16 }}>📦</span>}
                               </div>
                               <span style={s.tdBold}>{item.title}</span>
