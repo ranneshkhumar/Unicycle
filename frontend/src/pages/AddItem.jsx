@@ -22,7 +22,7 @@ export default function AddItem() {
     availableTo: '',
     condition: 'Good',
     tags: '',
-    penalty: '',
+    damagePenalty: '',
   });
 
   useEffect(() => {
@@ -155,8 +155,8 @@ export default function AddItem() {
                           style={s.input}
                           type="text"
                           placeholder="e.g. ₹50 fine or full replacement cost"
-                          value={form.penalty}
-                          onChange={e => setForm({ ...form, penalty: e.target.value })}
+                          value={form.damagePenalty}
+                          onChange={e => setForm({ ...form, damagePenalty: e.target.value })}
                         />
                         <small style={{ color: "#6b6375", fontSize: 12 }}>
                           Clearly mention the penalty if the item is damaged
