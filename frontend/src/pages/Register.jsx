@@ -24,7 +24,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(form.name, form.email, form.password, form.university);
-      toast.success('Welcome to CampusShare!');
+      toast.success('Welcome to Unicycle!');
       navigate('/');
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Registration failed');
