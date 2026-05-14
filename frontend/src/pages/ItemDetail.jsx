@@ -122,15 +122,16 @@ const ItemDetail = () => {
 
 <p style={s.price}>{getPriceDisplay()}</p>
 
-<div style={s.availableBox}>
-  
-  📅 Available till:{' '}
-  <strong>
-    {item.availableTo
-      ? new Date(item.availableTo).toLocaleDateString('en-GB')
-      : 'Not specified'}
-  </strong>
-</div>
+{item.listingType === 'Rent' && (
+  <div style={s.availableBox}>
+    📅 Available till:{' '}
+    <strong>
+      {item.availableTo
+        ? new Date(item.availableTo).toLocaleDateString('en-GB')
+        : 'Not specified'}
+    </strong>
+  </div>
+)}
 
 {item.damagePenalty && (
   <div style={s.penaltyBox}>
