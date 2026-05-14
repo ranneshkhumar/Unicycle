@@ -11,8 +11,7 @@ export default function Profile() {
   const [form, setForm] = useState({ name: '', university: '', bio: '' });
   const [profileImage, setProfileImage] = useState(null);
 
-  // ✅ BASE URL FIX
-  const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+ 
 
   useEffect(() => {
     if (user) {
@@ -76,7 +75,7 @@ export default function Profile() {
           <div style={s.profileMain}>
             <div style={s.avatarWrap}>
               {user?.profileImage ? (
-                <img src={`${BASE_URL}${user.profileImage}`} alt="" style={s.avatar} />
+                <img src={user.profileImage} alt="" style={s.avatar} />
               ) : (
                 <div style={s.avatarFallback}>
                   {user?.name?.charAt(0).toUpperCase()}
@@ -183,7 +182,7 @@ export default function Profile() {
                   <div style={s.itemImg}>
                     {item.images?.[0] ? (
                       <img
-                        src={`${BASE_URL}${item.images[0]}`}
+                        src={item.images[0]}
                         alt=""
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
