@@ -120,8 +120,7 @@ const ItemDetail = () => {
 
               <h1 style={s.title}>{item.title}</h1>
               <p style={s.price}>{getPriceDisplay()}</p>
-              {item.availableTo && (
-  <div style={s.availableBox}>
+          <div style={s.availableBox}>
   📅 Available till:{' '}
   <strong>
     {item.availableTo
@@ -129,7 +128,6 @@ const ItemDetail = () => {
       : 'Not specified'}
   </strong>
 </div>
-)}
 
 {/* Damage Penalty Warning */}
 {item.damagePenalty && (
@@ -196,6 +194,20 @@ const ItemDetail = () => {
 
                     <div style={s.field}>
                       <label style={s.label}>Start Date</label>
+                      
+                    <input
+  style={s.input}
+  type="date"
+  min={new Date().toISOString().split('T')[0]}
+  max={item.availableTo?.split('T')[0]}
+  value={form.startDate}
+  onChange={e => setForm({ ...form, startDate: e.target.value })}
+  required
+/>
+                    </div>
+
+                    <div style={s.field}>
+                      <label style={s.label}>End Date</label>
                       <input
   style={s.input}
   type="date"
@@ -205,18 +217,6 @@ const ItemDetail = () => {
   onChange={e => setForm({ ...form, endDate: e.target.value })}
   required
 />
-                    </div>
-
-                    <div style={s.field}>
-                      <label style={s.label}>End Date</label>
-                      <input
-                        style={s.input}
-                        type="date"
-                        min={form.startDate}
-                        value={form.endDate}
-                        onChange={e => setForm({ ...form, endDate: e.target.value })}
-                        required
-                      />
                     </div>
 
                     {totalDays > 0 && (
@@ -265,6 +265,7 @@ const ItemDetail = () => {
     </div>
   );
 };
+
 /* ==================== RESPONSIVE STYLES ==================== */
 const s = {
   page: { minHeight: '100vh', background: '#f0f4f8', padding: '20px 16px' },
