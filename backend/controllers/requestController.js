@@ -13,6 +13,21 @@ const createRequest = async (req, res) => {
     const end = new Date(endDate);
     const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     if (totalDays <= 0) return res.status(400).json({ success: false, message: 'Invalid date range' });
+    // ✅ Check item availability limit
+if (item.availableTo) {
+
+  const availableTill = new Date(item.availableTo);
+
+  // remove time for accurate comparison
+  availableTill.setHours(23, 59, 59, 999);
+
+  if (end > availableTill) {
+    return res.status(400).json({
+      success: false,
+      message: `Item available only till ${availableTill.toLocaleDateString()}`
+    });
+  }
+}
     const request = await Request.create({ item: itemId, requester: req.user._id, owner: item.owner, startDate: start, endDate: end, totalDays, totalAmount: totalDays * item.pricePerDay, message });
     await Notification.create({ recipient: item.owner, type: 'request_received', message: `${req.user.name} requested to rent "${item.title}"`, relatedItem: item._id, relatedRequest: request._id });
     await request.populate(['item', 'requester', 'owner']);
