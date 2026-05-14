@@ -119,8 +119,16 @@ const ItemDetail = () => {
               </div>
 
               <h1 style={s.title}>{item.title}</h1>
-              <p style={s.price}>{getPriceDisplay()}</p>
-          <div style={s.availableBox}>
+             <p style={s.price}>{getPriceDisplay()}</p>
+
+{item.damagePenalty && (
+  <div style={s.penaltyBox}>
+    <p style={s.penaltyTitle}>⚠ Damage Penalty</p>
+    <p style={s.penaltyText}>{item.damagePenalty}</p>
+  </div>
+)}
+
+<div style={s.availableBox}>
   📅 Available till:{' '}
   <strong>
     {item.availableTo
@@ -129,16 +137,7 @@ const ItemDetail = () => {
   </strong>
 </div>
 
-{/* Damage Penalty Warning */}
-{item.damagePenalty && (
-  <div style={s.penaltyBox}>
-    <p style={s.penaltyTitle}>⚠ Damage Penalty</p>
-    <p style={s.penaltyText}>{item.damagePenalty}</p>
-  </div>
-)}
-
 <p style={s.description}>{item.description}</p>
-
               {item.tags?.length > 0 && (
                 <div style={s.tagsRow}>
                   {item.tags.map((tag, i) => (
@@ -298,12 +297,13 @@ const s = {
 
   title: { fontSize: 24, fontWeight: 800, color: '#1a202c', marginBottom: 12 },
   price: { fontSize: 28, fontWeight: 800, color: '#4f46e5', marginBottom: 16 },
-  availableBox: {
+availableBox: {
   background: '#ecfdf5',
   color: '#065f46',
   border: '1px solid #a7f3d0',
   padding: '10px 14px',
   borderRadius: 10,
+  marginTop: 14,
   marginBottom: 16,
   fontSize: 14,
   fontWeight: 600,
@@ -408,3 +408,4 @@ penaltyText: {
 };
 
 export default ItemDetail;
+
