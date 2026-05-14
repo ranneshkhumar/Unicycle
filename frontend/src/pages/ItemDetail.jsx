@@ -120,6 +120,14 @@ const ItemDetail = () => {
 
               <h1 style={s.title}>{item.title}</h1>
               <p style={s.price}>{getPriceDisplay()}</p>
+              {item.availableTo && (
+  <div style={s.availableBox}>
+    📅 Available till:{' '}
+    <strong>
+      {new Date(item.availableTo).toLocaleDateString()}
+    </strong>
+  </div>
+)}
 
 {/* Damage Penalty Warning */}
 {item.damagePenalty && (
@@ -287,6 +295,16 @@ const s = {
 
   title: { fontSize: 24, fontWeight: 800, color: '#1a202c', marginBottom: 12 },
   price: { fontSize: 28, fontWeight: 800, color: '#4f46e5', marginBottom: 16 },
+  availableBox: {
+  background: '#ecfdf5',
+  color: '#065f46',
+  border: '1px solid #a7f3d0',
+  padding: '10px 14px',
+  borderRadius: 10,
+  marginBottom: 16,
+  fontSize: 14,
+  fontWeight: 600,
+},
   description: { color: '#374151', lineHeight: 1.6, marginBottom: 16 },
   penaltyBox: {
   background: '#fee2e2',
