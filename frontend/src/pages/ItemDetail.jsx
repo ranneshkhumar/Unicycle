@@ -120,7 +120,16 @@ const ItemDetail = () => {
 
               <h1 style={s.title}>{item.title}</h1>
               <p style={s.price}>{getPriceDisplay()}</p>
-              <p style={s.description}>{item.description}</p>
+
+{/* Damage Penalty Warning */}
+{item.damagePenalty && (
+  <div style={s.penaltyBox}>
+    <p style={s.penaltyTitle}>⚠ Damage Penalty</p>
+    <p style={s.penaltyText}>{item.damagePenalty}</p>
+  </div>
+)}
+
+<p style={s.description}>{item.description}</p>
 
               {item.tags?.length > 0 && (
                 <div style={s.tagsRow}>
@@ -279,6 +288,28 @@ const s = {
   title: { fontSize: 24, fontWeight: 800, color: '#1a202c', marginBottom: 12 },
   price: { fontSize: 28, fontWeight: 800, color: '#4f46e5', marginBottom: 16 },
   description: { color: '#374151', lineHeight: 1.6, marginBottom: 16 },
+  penaltyBox: {
+  background: '#fee2e2',
+  border: '1px solid #fca5a5',
+  borderLeft: '6px solid #dc2626',
+  borderRadius: 12,
+  padding: '14px 16px',
+  marginBottom: 18,
+},
+
+penaltyTitle: {
+  color: '#991b1b',
+  fontWeight: 800,
+  fontSize: 15,
+  marginBottom: 6,
+},
+
+penaltyText: {
+  color: '#7f1d1d',
+  fontSize: 14,
+  lineHeight: 1.5,
+},
+
   tagsRow: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 },
   tag: { background: '#f3f4f6', color: '#6b7280', padding: '4px 10px', borderRadius: 20, fontSize: 12 },
 
