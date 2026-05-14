@@ -119,16 +119,11 @@ const ItemDetail = () => {
               </div>
 
               <h1 style={s.title}>{item.title}</h1>
-             <p style={s.price}>{getPriceDisplay()}</p>
 
-{item.damagePenalty && (
-  <div style={s.penaltyBox}>
-    <p style={s.penaltyTitle}>⚠ Damage Penalty</p>
-    <p style={s.penaltyText}>{item.damagePenalty}</p>
-  </div>
-)}
+<p style={s.price}>{getPriceDisplay()}</p>
 
 <div style={s.availableBox}>
+  <p>DEBUG AVAILABLE</p>
   📅 Available till:{' '}
   <strong>
     {item.availableTo
@@ -136,6 +131,13 @@ const ItemDetail = () => {
       : 'Not specified'}
   </strong>
 </div>
+
+{item.damagePenalty && (
+  <div style={s.penaltyBox}>
+    <p style={s.penaltyTitle}>⚠ Damage Penalty</p>
+    <p style={s.penaltyText}>{item.damagePenalty}</p>
+  </div>
+)}
 
 <p style={s.description}>{item.description}</p>
               {item.tags?.length > 0 && (
