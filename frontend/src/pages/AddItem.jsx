@@ -185,8 +185,7 @@ export default function AddItem() {
                       <label style={s.label}>Available Until</label>
                       <input
                         style={s.input}
-                        type="date"
-                        value={form.availableTo}
+  
                         onChange={e => setForm({ ...form, availableTo: e.target.value })}
                       />
                     </div>
