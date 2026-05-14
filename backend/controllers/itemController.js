@@ -109,6 +109,8 @@ const createItem = async (req, res) => {
       images,
       owner: req.user._id,
     };
+    console.log(req.body);
+console.log("Damage Penalty:", req.body.damagePenalty);
 
     if (availableTo) {
       itemData.availableTo = availableTo;
