@@ -76,16 +76,16 @@ const register = async (req, res) => {
 
     //✅ ONLY rajalakshmi.edu.in emails allowed
 
-    const allowedDomain = 'rajalakshmi.edu.in';
+    // const allowedDomain = 'rajalakshmi.edu.in';
 
-    const emailDomain = email.toLowerCase().split('@')[1];
+    // const emailDomain = email.toLowerCase().split('@')[1];
 
-    if (emailDomain !== allowedDomain) {
-      return res.status(400).json({
-        success: false,
-        message: 'Only rajalakshmi.edu.in email addresses are allowed',
-      });
-    }
+    // if (emailDomain !== allowedDomain) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: 'Only rajalakshmi.edu.in email addresses are allowed',
+    //   });
+    // }
 
     // ✅ Check existing user
     const existingUser = await User.findOne({
