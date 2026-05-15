@@ -24,7 +24,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(form.name, form.email, form.password, form.university);
-      toast.success('Welcome to Unicycle!');
+      toast.success('Welcome to Unicycle! Kindly Verify Your Email');
       navigate('/');
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Registration failed');
